@@ -2,14 +2,18 @@
 
 //Alumno: Antinao Nicolas
 
+
+include_once "Pasajero.php";
+include_once "ResponsableV.php";
 class Viaje {
 
-    //Atributos: $codViaje, $destino, $maxPasajeros, $arregloPasajeros
+    //Atributos: $codViaje, $destino, $maxPasajeros, $arregloPasajeros, $responsableViaje
 
     private $codViaje;
     private $destino;
     private $maxPasajeros;
     private $arregloPasajeros;
+    private $responsableViaje;
 
 
     public function __construct($codigo, $destinoViaje, $cantMaxPasajeros, $arrayPasajeros) {
@@ -17,6 +21,7 @@ class Viaje {
         $this->destino = $destinoViaje;
         $this->maxPasajeros = $cantMaxPasajeros;
         $this->arregloPasajeros = $arrayPasajeros;
+        $this->responsableViaje = new ResponsableV("", "", "", "");
     }
     
 
@@ -47,6 +52,12 @@ class Viaje {
     public function getArregloPasajeros() {
         return $this->arregloPasajeros;
     }
+    /**
+     * Retorna el valor del objeto responsable
+     */
+    public function getResponsableViaje(){
+        return $this->responsableViaje;
+    }
 
 
     /** 
@@ -76,10 +87,17 @@ class Viaje {
     public function setArregloPasajeros($arrayPasajeros) {
         $this->arregloPasajeros = $arrayPasajeros;
     }
+    /**
+     * Setea el valor del objeto responsable
+     */
+    public function setResponsableViaje($responsableV){
+        $this->responsableViaje = $responsableV;
+    }
 
 
     public function __toString(){
-        return "\nViaje " . $this->getCodViaje() . "\nDestino: " . $this->getDestino() . "\nCantidad maxima de pasajeros: " . $this->getMaxPasajeros() . "\nPasajeros:\n" . $this->mostrarPasajero();
+        $objetoResponsable = $this->getResponsableViaje();
+        return "\nViaje " . $this->getCodViaje() . "\nDestino: " . $this->getDestino() . "\nCantidad maxima de pasajeros: " . $this->getMaxPasajeros() . "\nPasajeros:\n" . $this->mostrarPasajero() . "\n-- Responsable del viaje --" . $objetoResponsable->__toString();
     }
 
     
@@ -110,10 +128,8 @@ class Viaje {
         $infoPasajero = "";
 
         for ($i=0; $i<count($auxiliarColeccion); $i++){
-            $nombre = $auxiliarColeccion[$i]["nombre"];
-            $apellido = $auxiliarColeccion[$i]["apellido"];
-            $dni = $auxiliarColeccion[$i]["dni"];
-            $infoPasajero = $infoPasajero . $nombre . " " . $apellido . " ". $dni . " " . "\n";
+            $objetoPasajero = $auxiliarColeccion[$i];
+            $infoPasajero = $infoPasajero . $objetoPasajero->__toString() . "\n";
         }
         return $infoPasajero;
     }
@@ -140,11 +156,13 @@ class Viaje {
      * @param Int
      */
     public function obtenerPasajeroDni($dni){
+        $auxiliarColeccion = $this->getArregloPasajeros();
         $i = 0;
         $nroDocumentoExiste = false;
-        $cantidadPasajeros = count($this->getArregloPasajeros());
-        while ($i<$cantidadPasajeros && !$nroDocumentoExiste) {
-            if ($this->getArregloPasajeros()[$i]["dni"] == $dni) {
+
+        while ($i<count($auxiliarColeccion) && !$nroDocumentoExiste) {
+            $objetoPasajero = $auxiliarColeccion[$i];
+            if ($objetoPasajero->getNroDocumento() == $dni) {
                 $nroDocumentoExiste = true;
             } 
             else {
@@ -156,6 +174,48 @@ class Viaje {
         }
         return $i;
     }
+
+
+    public function modificarPasajero($dniABuscar, $nombreModificado, $apellidoModificado, $telefonoModificado){
+        
+        $indiceDni = $this->obtenerPasajeroDni($dniABuscar);
+        if ($indiceDni>=0) {
+            $colPasajeros = $this->getArregloPasajeros();
+            $objetoPasajero = $colPasajeros[$indiceDni];
+            $objetoPasajero->setNombre($nombreModificado);
+            $objetoPasajero->setApellido($apellidoModificado);
+            $objetoPasajero->setTelefono($telefonoModificado);
+
+            $this->setArregloPasajeros($colPasajeros);
+        }
+    }
+
+
+    public function agregarPasajero($nuevoNombre, $nuevoApellido, $nuevoDni, $nuevoTelefono){
+        $colPasajeros = $this->getArregloPasajeros();
+        $nuevoPasajero = new Pasajero($nuevoNombre, $nuevoApellido, $nuevoDni, $nuevoTelefono);
+        $colPasajeros[] = $nuevoPasajero;
+        $this->setArregloPasajeros($colPasajeros);
+    }
+
+
+    public function agregarResponsable(){
+        $objetoResponsable = $this->getResponsableViaje();
+        //$datosObjetoResponsable = $objetoResponsable->__toString();
+        if (empty($objetoResponsable->getNroEmpleado())) {
+            echo "Ingrese el numero del empleado responsable: ";
+            $nroEmpleadoResponsable = trim(fgets(STDIN));
+            echo "Ingrese el numero de licencia del responsable: ";
+            $nroLicenciaResponsable = trim(fgets(STDIN));
+            echo "Ingrese el nombre del responsable: ";
+            $nombreResponsable = trim(fgets(STDIN));
+            echo "Ingrese el apellido del responsable: ";
+            $apellidoResponsable = trim(fgets(STDIN));
+            $objetoResponsable = new ResponsableV($nroEmpleadoResponsable, $nroLicenciaResponsable, $nombreResponsable, $apellidoResponsable);
+            $this->setResponsableViaje($objetoResponsable);
+        }
+    }
+    
     
 
 }

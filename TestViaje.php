@@ -1,5 +1,5 @@
 <?php
-include "Viaje.php";
+include_once "Viaje.php";
 
 /**
  * Dada una cantidad maxima de pasajeros se crea un arreglo y se le va pidiendo al usuario la informacion de los pasajeros.
@@ -10,16 +10,24 @@ function arrayPasajeros($maxPasajeros){
     $arregloPasajeros = [];
     $cantidadPasajeros = solicitarCantidadPasajeros($maxPasajeros);
     for ($numPasajero=0; $numPasajero<$cantidadPasajeros; $numPasajero++){
+        
         echo "Ingrese el nombre del pasajero numero ". ($numPasajero+1) . ": ";
         $nombre = trim(fgets(STDIN));
         echo "Ingrese el apellido del pasajero numero " .($numPasajero+1) . ": ";
         $apellido = trim(fgets(STDIN));
         echo "Ingrese el documento del pasajero numero " . ($numPasajero+1) . ": ";
         $documento = trim(fgets(STDIN));
+        echo "Ingrese el telefono del pasajero numero " . ($numPasajero+1) . ": ";
+        $telefono = trim(fgets(STDIN));
         
+        /*
         $arregloPasajeros[$numPasajero]["nombre"] = $nombre;
         $arregloPasajeros[$numPasajero]["apellido"] = $apellido;
         $arregloPasajeros[$numPasajero]["dni"] = $documento;
+        */
+        
+        $objPasajero = new Pasajero($nombre, $apellido, $documento, $telefono);
+        $arregloPasajeros[] = $objPasajero; 
     }
     return $arregloPasajeros;
 }
@@ -58,18 +66,19 @@ $objViaje = new Viaje($codigoViaje, $destinoViaje, $maxCantViaje, $arregloPasaje
 $bandera = true;
 //Menu
 do {
-    echo "Bienvenido a Viaje Feliz!!\nElija una opcion\n";
+    echo "\n\nBienvenido a Viaje Feliz!!\n\nElija una opcion\n";
     echo "1. Agregar un pasajero.\n";
     echo "2. Quitar un pasajero.\n";
     echo "3. Mostrar informacion del viaje.\n";
     echo "4. Modificar el destino.\n";
-    echo "5. Salir.\nOpciones: ";
+    echo "5. Modificar la informacion de un pasajero.\n";
+    echo "6. Agregar otro responsable para el viaje.\n";
+    echo "7. Salir.\nOpciones: ";
     
     $opcion = trim(fgets(STDIN));
 
     switch ($opcion) {
         case 1: {
-            $coleccionViaje = $objViaje->getArregloPasajeros();
             echo "Ingrese los datos del pasajero que quiere agregar: \n";
             echo "Ingrese el nombre: ";
             $nombreNuevo = trim(fgets(STDIN));
@@ -77,9 +86,16 @@ do {
             $apellidoNuevo = trim(fgets(STDIN));
             echo "Ingrese el numero de documento: ";
             $dniNuevo = trim(fgets(STDIN));
-            $coleccionViaje[count($coleccionViaje)] = ["nombre"=>$nombreNuevo, "apellido"=>$apellidoNuevo, "dni"=>$dniNuevo];
+            echo "Ingrese el telefono: ";
+            $telefonoNuevo = trim(fgets(STDIN));
+
             if ($objViaje->viajeConLugar()) {
-                $objViaje->setArregloPasajeros($coleccionViaje);
+                if ($objViaje->obtenerPasajeroDni($dniNuevo) > -1) {
+                    echo "No se puede agregar al pasajero porque el dni del mismo ya se encuentra registrado.\n";
+                }
+                else {
+                    $objViaje->agregarPasajero($nombreNuevo, $apellidoNuevo, $dniNuevo, $telefonoNuevo);
+                }
             }
             else {
                 echo "No se puede agregar al pasajero, el viaje esta completo.\n";
@@ -99,7 +115,8 @@ do {
             break;
         }
         case 3: {
-            echo $objViaje . "\n";
+            $objViaje->agregarResponsable();
+            echo $objViaje;
             break;
         }
         case 4: {
@@ -108,8 +125,37 @@ do {
             $objViaje->setDestino($nuevoDestino);
             break;
         }
-        case 5: {
+        case 5:
+            echo "Ingrese el dni del pasajero que quiere modificar: ";
+            $dniBuscado = trim(fgets(STDIN));
+            if ($objViaje->obtenerPasajeroDni($dniBuscado)>=0) {
+                echo "Ingrese el nombre: ";
+                $nombreNuevo = trim(fgets(STDIN));
+                echo "Ingrese el apellido: ";
+                $apellidoNuevo = trim(fgets(STDIN));
+                echo "Ingrese el telefono: ";
+                $telefonoNuevo = trim(fgets(STDIN));
+                $objViaje->modificarPasajero($dniBuscado, $nombreNuevo, $apellidoNuevo, $telefonoNuevo);
+            }
+            else {
+                echo "El dni no se ha encontrado, por lo tanto no se han podido modificar los datos.\n";
+            }
+            break;
+        case 6:
+            echo "Ingrese el numero del empleado responsable: ";
+            $nroEmpleadoResponsable = trim(fgets(STDIN));
+            echo "Ingrese el numero de licencia del responsable: ";
+            $nroLicenciaResponsable = trim(fgets(STDIN));
+            echo "Ingrese el nombre del responsable: ";
+            $nombreResponsable = trim(fgets(STDIN));
+            echo "Ingrese el apellido del responsable: ";
+            $apellidoResponsable = trim(fgets(STDIN));
+            $objetoResponsable = new ResponsableV($nroEmpleadoResponsable, $nroLicenciaResponsable, $nombreResponsable, $apellidoResponsable);
+            $objViaje->setResponsableViaje($objetoResponsable);
+            break;
+        case 7: {
             $bandera = false;
+            echo "Gracias por usar nuestra aplicacion!!\n";
             break;
         }
         default: {
